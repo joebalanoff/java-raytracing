@@ -21,5 +21,5 @@ This is a simple Java raytracer that renders 3D scenes using ray tracing techniq
 
 ## Examples
 
-![Example Scene 1](example_scene1.png)
+![Example Scene 1](render.png)
 *Example Scene 1: Spheres and plane with basic materials.*
