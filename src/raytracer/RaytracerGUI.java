@@ -54,12 +54,12 @@ public class RaytracerGUI extends JPanel {
             new Material(Color.GRAY, .5, .5)
         ));
 
-        sceneObjects.add(new Sphere(new Vector3(-1.2, 0, 5), 1, new Material(Color.green, .5, .5)));
-        sceneObjects.add(new Sphere(new Vector3(1.2, 0, 5), 1, new Material(Color.red, .5, .5)));
+        sceneObjects.add(new Sphere(new Vector3(-2.5, 0, 5), 1, new Material(Color.red, .5, .5)));
+        sceneObjects.add(new Sphere(new Vector3(0, 0, 5), 1, new Material(Color.green, .5, .5)));
+        sceneObjects.add(new Sphere(new Vector3(2.5, 0, 5), 1, new Material(Color.blue, .5, .5)));
 
         lights = new ArrayList<>();
-        //lights.add(new Light(new Vector3(0, 5, 0), Color.WHITE));
-        lights.add(new Light(new Vector3(-5, 0, 0), Color.WHITE));
+        lights.add(new Light(new Vector3(0, 5, 0), Color.WHITE, .8));
 
         render();
         startRenderingLoop();
@@ -98,7 +98,8 @@ public class RaytracerGUI extends JPanel {
     }
 
     private void render() {
-        final int numThreads = Runtime.getRuntime().availableProcessors();
+        int numThreads = Runtime.getRuntime().availableProcessors() - 2;
+        if(numThreads <= 0) numThreads = 1;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         for(int y = 0; y < HEIGHT; y++) {
@@ -161,6 +162,11 @@ public class RaytracerGUI extends JPanel {
         }
     
         for (Light light : lights) {
+            double intensity = light.getIntensity();
+            r *= intensity;
+            g *= intensity;
+            b *= intensity;
+
             Vector3 lightDirection = light.getPosition().subtract(closestIntersection.point).normalize();
     
             double diffuseIntensity = Math.max(0, closestIntersection.normal.dotProduct(lightDirection));
@@ -174,9 +180,9 @@ public class RaytracerGUI extends JPanel {
             Vector3 halfVector = lightDirection.add(viewDirection).normalize();
             double specularIntensity = Math.pow(Math.max(0, closestIntersection.normal.dotProduct(halfVector)), 50.0); // SPECULAR EXPONENT (50.0)
             Color specularColor = new Color(
-                (int) (light.getColor().getRed() * specularIntensity),
-                (int) (light.getColor().getGreen() * specularIntensity),
-                (int) (light.getColor().getBlue() * specularIntensity)
+                (int) (light.getColor().getRed() * specularIntensity * intensity),
+                (int) (light.getColor().getGreen() * specularIntensity * intensity),
+                (int) (light.getColor().getBlue() * specularIntensity * intensity)
             );
     
             boolean inShadow = false;
@@ -191,9 +197,9 @@ public class RaytracerGUI extends JPanel {
             }
     
             if (!inShadow) {
-                r += diffuseColor.getRed() + specularColor.getRed();
-                g += diffuseColor.getGreen() + specularColor.getGreen();
-                b += diffuseColor.getBlue() + specularColor.getBlue();
+                r += (diffuseColor.getRed() + specularColor.getRed()) * intensity;
+                g += (diffuseColor.getGreen() + specularColor.getGreen()) * intensity;
+                b += (diffuseColor.getBlue() + specularColor.getBlue()) * intensity;
             }
         }
     
@@ -229,7 +235,7 @@ public class RaytracerGUI extends JPanel {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        g.drawImage(image, 0, 0, null);
+        g.drawImage(image, 0, 0, this);
     }
     
     public static void main(String[] args) {
@@ -238,7 +244,7 @@ public class RaytracerGUI extends JPanel {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setResizable(false);
 
-            Camera camera = new Camera(new Vector3(0, 0, -1.5), 0, 0, Math.toRadians(60), (double) WIDTH / HEIGHT);
+            Camera camera = new Camera(new Vector3(0, 0, -1.5), -(Math.PI / 2), 0, Math.toRadians(60), (double) WIDTH / HEIGHT);
 
             RaytracerGUI raytracerGUI = new RaytracerGUI(camera);
             frame.add(raytracerGUI);

@@ -27,7 +27,6 @@ public class Camera {
         pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
     
         Vector3 direction = getDirection();
-        System.out.println(direction);
     
         Vector3 right = direction.crossProduct(Vector3.UP).normalize();
     
@@ -65,7 +64,6 @@ public class Camera {
     public double getPitch() { return pitch; }
 
     public void mouseDragged(int dx, int dy) {
-        System.out.println(dx + "," + dy);
         yaw += dx * 0.01;
         pitch += dy * 0.01;
         pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
